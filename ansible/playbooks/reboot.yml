@@ -1,0 +1,8 @@
+---
+- name: Reboot all machines
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Update all installed packages
+      ansible.builtin.reboot:
