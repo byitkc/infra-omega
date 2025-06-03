@@ -1,0 +1,80 @@
+---
+- name: Prep virtual hosts running Fedora
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Update all installed packages
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+
+- name: Configure some defaults
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: CONFIG - hostname of the system
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname_short }}"
+
+- name: Installing required packages
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install htop - top alternative
+      ansible.builtin.dnf:
+        name: htop
+        state: latest
+
+    - name: Install Virtualization Group
+      ansible.builtin.dnf:
+        name: "@virtualization"
+        state: latest
+
+    - name: Install Cockpit Applications 
+      ansible.builtin.dnf:
+        name: 
+          - cockpit
+          - cockpit-bridge
+          - cockpit-files
+          - cockpit-image-builder
+          - cockpit-kdump
+          - cockpit-machines
+          - cockpit-networkmanager
+          - cockpit-packagekit
+          - cockpit-podman
+          - cockpit-selinux
+          - cockpit-session-recording
+          - cockpit-storaged
+          - cockpit-system
+          - cockpit-ws
+          - cockpit-ws-selinux
+        state: latest
+
+- name: Enable required services
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Cockpit Socket for server management
+      ansible.builtin.systemd:
+        name: cockpit.socket
+        enabled: yes
+        state: started
+
+    - name: Libvirtd for virtualization
+      ansible.builtin.systemd:
+        name: libvirtd.service
+        enabled: yes
+        state: started
+
+- name: Cleanup
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: CLEANUP - Removing un-necessary dependencies
+      ansible.builtin.dnf:
+        autoremove: yes
