@@ -70,6 +70,18 @@
         enabled: yes
         state: started
 
+- name: Setup required group membership
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Add brandonyoung to the "qemu" group
+      ansible.builtin.user:
+        append: yes
+        groups:
+          - qemu
+        name: "{{ primary_user }}"
+
 - name: Cleanup
   hosts: all
   become: yes
