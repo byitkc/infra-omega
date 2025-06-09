@@ -93,6 +93,7 @@ done
 echo ""
 
 while true; do
+    echo "We can configure a network interface with a static IP now. If you don't configure one all attached interfaces will attempt DHCP."
     read -p "Would you like to configure an interface with a static IP now? (y/n): " net_replace
     case "$net_replace" in
         [Yy])
