@@ -1,0 +1,52 @@
+---
+- name: Configure initial Ansible Control Node
+  hosts: localhost
+  gather_facts: yes
+  become: yes
+  tasks:
+
+    - name: Install required pre-requisite packages
+      ansible.builtin.dnf:
+        name:
+          - ansible
+          - git
+          - fzf
+        state: latest
+
+    - name: Install editor
+      ansible.builtin.dnf:
+        name:
+          - neovim
+        state: latest
+
+- name: Setup home directory and settings
+  hosts: localhost
+  gather_facts: yes
+  become: no
+  vars:
+    github_username: "byitkc"
+  tasks:
+
+    - name: Ensure required git directories are create in ~
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/{{ item }}"
+        state: directory
+        recurse: no
+        mode: 0750
+      loop:
+        - "git/github.com/{{ github_username }}"
+
+    - name: Pull down neovim configuration
+      ansible.builtin.git:
+        dest: "{{ ansible_env.HOME }}/git/github.com/{{ github_username }}/config.nvim"
+        repo: "https://github.com/{{ github_username }}/config.nvim.git"
+        clone: yes
+        update: yes
+        version: "2025"
+
+    - name: Symbolic link to nvim configuration
+      ansible.builtin.file:
+        dest: "{{ ansible_env.HOME }}/.config/nvim"
+        src: "{{ ansible_env.HOME }}/git/github.com/{{ github_username }}/config.nvim"
+        state: link
+
