@@ -1,3 +1,6 @@
 ansible.cfg
 inventory.yml
 ansible-home
+
+# Exclude any public SSH Keys
+*.pub
