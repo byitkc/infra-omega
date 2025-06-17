@@ -1,52 +1,55 @@
 ---
 - name: Configure initial Ansible Control Node
   hosts: localhost
-  gather_facts: yes
-  become: yes
+  gather_facts: true
+  become: true
   tasks:
 
-    - name: Install required pre-requisite packages
+    - name: Install required packages
       ansible.builtin.dnf:
         name:
           - ansible
           - git
           - fzf
-        state: latest
-
-    - name: Install editor
-      ansible.builtin.dnf:
-        name:
           - neovim
+          - wget
         state: latest
+        update_cache: true
 
 - name: Setup home directory and settings
   hosts: localhost
-  gather_facts: yes
-  become: no
+  gather_facts: true
+  become: false
   vars:
-    github_username: "byitkc"
+    personal_github_username: "byitkc"
+    work_gitlab_username: "tgs-byoung"
   tasks:
 
     - name: Ensure required git directories are create in ~
       ansible.builtin.file:
         path: "{{ ansible_env.HOME }}/{{ item }}"
         state: directory
-        recurse: no
+        recurse: false
         mode: 0750
       loop:
-        - "git/github.com/{{ github_username }}"
+        - "git/github.com/{{ personal_github_username }}"
+        - "git/gitlab.com/{{ work_gitlab_username }}"
+        - ".config"
 
     - name: Pull down neovim configuration
       ansible.builtin.git:
-        dest: "{{ ansible_env.HOME }}/git/github.com/{{ github_username }}/config.nvim"
-        repo: "https://github.com/{{ github_username }}/config.nvim.git"
-        clone: yes
-        update: yes
-        version: "2025"
+        dest: "{{ item.dest }}"
+        repo: "{{ item.repo }}"
+        clone: true
+        update: true
+        version: "{{ item.version }}"
+      loop:
+        - { repo: "https://github.com/{{ personal_github_username }}/config.nvim.git", version: "2025", dest: "{{ ansible_env.HOME }}/git/github.com/{{ personal_github_username }}/config.nvim" }
+        - { repo: "ssh://git@gitlab.com/{{ work_gitlab_username }}/infra-phoenix", version: "main", dest: "{{ ansible_env.HOME }}/git/gitlab.com/{{ work_gitlab_username }}/infra-phoenix" }
 
     - name: Symbolic link to nvim configuration
       ansible.builtin.file:
         dest: "{{ ansible_env.HOME }}/.config/nvim"
-        src: "{{ ansible_env.HOME }}/git/github.com/{{ github_username }}/config.nvim"
+        src: "{{ ansible_env.HOME }}/git/github.com/{{ personal_github_username }}/config.nvim"
         state: link
 
