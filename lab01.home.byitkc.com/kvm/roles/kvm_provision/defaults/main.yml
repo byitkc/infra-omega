@@ -1,0 +1,15 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for kvm_provision
+base_image_name: Fedora-Server-Guest-Generic-42-1.1.x86_64.qcow2
+base_image_url: https://download.fedoraproject.org/pub/fedora/linux/releases/42/Server/x86_64/images/{{ base_image_name }}
+base_image_sha: 6ced066ae0bb6fb5e70c6a7e4c74cbd49cb5265af750ee1ec48bb7556fbe9880
+libvirt_pool_dir: "/mnt/vms-root"
+vm_name: f42-dev
+vm_vcpus: 2
+vm_ram_mb: 4096
+vm_net: default
+vm_root_pass: test123
+cleanup_tmp: no
+ssh_key: ~/.ssh/id_ed25519.pub
+

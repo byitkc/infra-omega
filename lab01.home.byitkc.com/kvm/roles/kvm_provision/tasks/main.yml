@@ -1,0 +1,66 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for kvm_provision
+- name: Ensure requirements are installed on VM host
+  ansible.builtin.package:
+    name:
+      - guestfs-tools
+      - python3-libvirt
+      - python3-lxml
+    state: present
+  become: true
+
+- name: Get VMs list
+  community.libvirt.virt:
+    command: list_vms
+  register: existing_vms
+  changed_when: false
+
+- name: Created VM is not exists
+  block:
+
+  - name: Download base image
+    ansible.builtin.get_url:
+      url: "{{ base_image_url }}"
+      dest: "/tmp/{{ base_image_name }}"
+      checksum: "sha256:{{ base_image_sha }}"
+
+  - name: Copy image to libvirt directory
+    ansible.builtin.copy:
+      dest: "{{ libvirt_pool_dir }}/{{ vm_name }}.qcow2"
+      src: "/tmp/{{ base_image_name }}"
+      force: no
+      remote_src: yes 
+      mode: 0660
+    register: copy_results
+
+  - name: Configure the image
+    command: |
+      virt-customize -a {{ libvirt_pool_dir }}/{{ vm_name }}.qcow2 \
+      --hostname {{ vm_name }} \
+      --root-password password:{{ vm_root_pass }} \
+      --ssh-inject 'root:file:{{ ssh_key }}' \
+      --uninstall cloud-init --selinux-relabel
+    when: copy_results is changed
+
+  - name: Define VM
+    community.libvirt.virt:
+      command: define
+      xml: "{{ lookup('template', 'vm-template.xml.j2') }}"
+
+  when: vm_name not in existing_vms.list_vms
+
+- name: Ensure VM is started
+  community.libvirt.virt:
+    name: "{{ vm_name }}"
+    state: running
+  register: vm_start_results
+  until: "vm_start_results is success"
+  retries: 15
+  delay: 2
+
+- name: Ensure temporary file is deleted
+  ansible.builtin.file:
+    path: "/tmp/{{ base_image_name }}"
+    state: absent
+  when: cleanup_tmp | bool

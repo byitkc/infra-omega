@@ -1,0 +1,25 @@
+- name: Deploys VM based on cloud image
+  hosts: host01.lenexa.corp.tgs-mtc.net
+  gather_facts: yes
+  become: yes
+  vars:
+    pool_dir: "/mnt/vms-root01"
+    vm: f42-auto-lab01
+    vcpus: 2
+    ram_mb: 4096
+    cleanup: false
+    net: bridge2751
+    ssh_pub_key: "./ssh-key.pub"
+
+  tasks:
+    - name: KVM Provision role
+      include_role:
+        name: kvm_provision
+      vars:
+        libvirt_pool_dir: "{{ pool_dir }}"
+        vm_name: "{{ vm }}"
+        vm_vcpus: "{{ vcpus }}"
+        vm_ram_mb: "{{ ram_mb }}"
+        vm_net: "{{ net }}"
+        cleanup_tmp: "{{ cleanup }}"
+        ssh_key: "{{ ssh_pub_key }}"
